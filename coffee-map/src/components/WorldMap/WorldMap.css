@@ -1,15 +1,4 @@
-.WorldMap {
-}
-
-.WorldMap--svg {
-}
-
 .WorldMap--svg--path {
-  fill: #ddd;
-  stroke: #aaa;
-}
-
-#content .map path {
   fill: #ddd;
   stroke: #aaa;
 }
