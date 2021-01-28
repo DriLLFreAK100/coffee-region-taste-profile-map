@@ -1,4 +1,3 @@
-.WorldMap--svg--path {
-  fill: #ddd;
-  stroke: #aaa;
+.WorldMap--svg path {
+  transition: fill 1s ease-out;
 }
