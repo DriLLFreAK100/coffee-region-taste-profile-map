@@ -1,7 +1,13 @@
 import * as d3 from 'd3';
 import coffeeDistributor2019 from '../../assets/coffee-distributor-2019.json';
 import geoJson from '../../assets/world.json';
-import React, { SVGProps, useEffect, useState } from 'react';
+import useWindowSize from '../../hooks/useWindowSize';
+import {
+  SVGProps,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 import './WorldMap.css';
 
 interface ICoffeeDistributor {
@@ -27,11 +33,6 @@ interface IMapCountry {
   svg: SVGProps<SVGPathElement>;
 }
 
-const exceptionCountryNames: { [key: string]: string } = {
-  'Tanzania': 'United Republic of Tanzania',
-  'Timor Leste': 'East Timor',
-}
-
 const defaultColor = '#ddd'
 const africaColor = '#d3a564'
 const africaColorAlt = '#ffd693';
@@ -39,6 +40,10 @@ const americaColor = '#af855f';
 const americaColorAlt = '#e2b58d';
 const asiaColor = '#563625';
 const asiaColorAlt = '#84604d';
+const exceptionCountryNames: { [key: string]: string } = {
+  'Tanzania': 'United Republic of Tanzania',
+  'Timor Leste': 'East Timor',
+}
 
 const constructContries = (geoPathGenerator: d3.GeoPath<any, d3.GeoPermissibleObjects>) => {
   const coffeeDistributorDict: { [key: string]: ICoffeeDistributor } =
@@ -130,6 +135,13 @@ const isMatchCoffeeRegion = (source: IMapCountry, target: IMapCountry) => {
 
 const WorldMap = () => {
   const [mapCountries, setMapCountries] = useState<IMapCountry[]>([]);
+  const { width, height } = useWindowSize();
+  const mapSize: [number, number] = useMemo(() => {
+    return [
+      (width) || 0,
+      (height) || 0
+    ];
+  }, [height, width])
 
   const handleMouseOverCountry = (country: IMapCountry) => {
     const updatedCountries = mapCountries
@@ -174,20 +186,20 @@ const WorldMap = () => {
   useEffect(() => {
     const projection = d3
       .geoEquirectangular()
-      .fitSize([800, 400], geoJson as any);
+      .fitSize(mapSize, geoJson as any);
 
     const geoPathGenerator = d3.geoPath().projection(projection);
     const countries = constructContries(geoPathGenerator);
 
     setMapCountries(countries);
-  }, []);
+  }, [mapSize]);
 
   return (
     <div className="WorldMap">
       <svg
         className="WorldMap--svg"
-        width="800"
-        height="400"
+        width={mapSize[0]}
+        height={mapSize[1]}
       >
         {mapCountries.map(country => {
           return (
