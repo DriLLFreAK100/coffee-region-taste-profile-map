@@ -1,14 +1,14 @@
 import * as d3 from 'd3';
 import coffeeDistributor2019 from '../../assets/coffee-distributor-2019.json';
 import geoJson from '../../assets/world.json';
-import useWindowSize from '../../hooks/useWindowSize';
+import { useWindowSize } from 'codefee-kit';
+import './WorldMap.css';
 import {
   SVGProps,
   useEffect,
   useMemo,
-  useState
+  useState,
 } from 'react';
-import './WorldMap.css';
 
 interface ICoffeeDistributor {
   Rank: string;
