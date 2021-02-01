@@ -1,3 +1,7 @@
 # World Map - Coffee Taste Profile
 
-An experiment with SVG. A simple world map indicating coffee taste profile by region
+### An experiment to build a world map using GeoJson and SVG. 
+
+The map hightlights and indicates the 3 major coffee regions in the world and their corresponding taste profiles in general.
+
+![alt text](https://github.com/DriLLFreAK100/coffee-region-taste-profile-map/blob/main/src/assets/App.png)
