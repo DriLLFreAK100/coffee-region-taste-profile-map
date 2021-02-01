@@ -1,0 +1,16 @@
+@import "./functions.scss";
+
+@mixin padding($top: null, $right: null, $bottom: null, $left: null) {
+  @if ($top != null) {
+    padding-top: rem($top);
+  }
+  @if ($right != null) {
+    padding-right: rem($right);
+  }
+  @if ($bottom != null) {
+    padding-bottom: rem($bottom);
+  }
+  @if ($left != null) {
+    padding-left: rem($left);
+  }
+}

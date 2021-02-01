@@ -1,1 +1,3 @@
-export { default as WorldMap } from './WorldMap';
+import WorldMap from './WorldMap';
+
+export default WorldMap;

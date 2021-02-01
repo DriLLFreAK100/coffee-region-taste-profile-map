@@ -1,141 +1,29 @@
-import * as d3 from 'd3';
-import coffeeDistributor2019 from '../../assets/coffee-distributor-2019.json';
 import geoJson from '../../assets/world.json';
+import Tooltip from '../Tooltip';
+import useCoffeeData, { IMapCountry } from '../../hooks/useCoffeeData';
+import { geoEquirectangular, geoPath } from 'd3-geo';
 import { useWindowSize } from 'codefee-kit';
-import './WorldMap.css';
+import './WorldMap.scss';
 import {
-  SVGProps,
+  ReactNode,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
-interface ICoffeeDistributor {
-  Rank: string;
-  Country: string;
-  Bags: string;
-  MetricTons: string;
-  Pounds: string;
-}
-
-interface ITasteProfile {
-  summary: string;
-}
-
-interface IMapCountry {
-  countryName: string;
-  continent: string;
-  isCoffeeRegion: boolean;
-  regionUn: string;
-  regionWb: string;
-  subRegion: string;
-  tasteProfile: ITasteProfile;
-  svg: SVGProps<SVGPathElement>;
-}
-
-const defaultColor = '#ddd'
-const africaColor = '#d3a564'
-const africaColorAlt = '#ffd693';
-const americaColor = '#af855f';
-const americaColorAlt = '#e2b58d';
-const asiaColor = '#563625';
-const asiaColorAlt = '#84604d';
-const exceptionCountryNames: { [key: string]: string } = {
-  'Tanzania': 'United Republic of Tanzania',
-  'Timor Leste': 'East Timor',
-}
-
-const constructContries = (geoPathGenerator: d3.GeoPath<any, d3.GeoPermissibleObjects>) => {
-  const coffeeDistributorDict: { [key: string]: ICoffeeDistributor } =
-    coffeeDistributor2019.reduce((a, c: ICoffeeDistributor) => {
-      return {
-        ...a,
-        [exceptionCountryNames[c.Country] ?? c.Country]: c,
-      };
-    }, {});
-
-  const countries = geoJson.features.map((feature) => {
-    let svgProps: SVGProps<SVGPathElement> = {
-      d: geoPathGenerator(feature as any) || '',
-      stroke: defaultColor,
-      fill: defaultColor,
-    }
-
-    let isCoffeeRegion = false;
-
-    if (coffeeDistributorDict[feature.properties.ADMIN]) {
-      isCoffeeRegion = true;
-
-      svgProps = {
-        ...svgProps,
-        stroke: getRegionColor(feature.properties.REGION_UN),
-        fill: getRegionColor(feature.properties.REGION_UN),
-      }
-    }
-
-    return {
-      continent: feature.properties.CONTINENT,
-      countryName: feature.properties.ADMIN,
-      isCoffeeRegion,
-      regionUn: feature.properties.REGION_UN,
-      regionWb: feature.properties.REGION_WB,
-      subRegion: feature.properties.SUBREGION,
-      tasteProfile: getRegionTasteProfile(feature.properties.REGION_UN),
-      svg: svgProps,
-    } as IMapCountry;
-  });
-
-  return countries;
-}
-
-const getRegionColor = (region: string) => {
-  if (region.includes('America')) {
-    return americaColor;
-  } else if (region.includes('Africa')) {
-    return africaColor;
-  } else if (region.includes('Asia')) {
-    return asiaColor;
-  }
-  return defaultColor;
-};
-
-const getRegionHoverColor = (region: string) => {
-  if (region.includes('America')) {
-    return americaColorAlt;
-  } else if (region.includes('Africa')) {
-    return africaColorAlt;
-  } else if (region.includes('Asia')) {
-    return asiaColorAlt;
-  }
-  return defaultColor;
-};
-
-const getRegionTasteProfile = (region: string): ITasteProfile | null => {
-  if (region.includes('America')) {
-    return {
-      summary: 'Nutty, Chocolate'
-    };
-  } else if (region.includes('Africa')) {
-    return {
-      summary: 'Fruity, Floral'
-    };
-  } else if (region.includes('Asia')) {
-    return {
-      summary: 'Earthy, Spice, Dark Chocolate'
-    };
-  }
-  return null;
-};
-
-const isMatchCoffeeRegion = (source: IMapCountry, target: IMapCountry) => {
-  return source.isCoffeeRegion
-    && target.isCoffeeRegion
-    && source.regionUn === target.regionUn;
-}
-
 const WorldMap = () => {
+  const tooltip = useRef<HTMLDivElement>(null);
+  const [tooltipContent, setTooltipContent] = useState<ReactNode>(null);
   const [mapCountries, setMapCountries] = useState<IMapCountry[]>([]);
   const { width, height } = useWindowSize();
+  const {
+    constructContries,
+    isMatchCoffeeRegion,
+    getRegionColor,
+    getRegionHoverColor
+  } = useCoffeeData();
+
   const mapSize: [number, number] = useMemo(() => {
     return [
       (width) || 0,
@@ -143,8 +31,15 @@ const WorldMap = () => {
     ];
   }, [height, width])
 
-  const handleMouseOverCountry = (country: IMapCountry) => {
-    const updatedCountries = mapCountries
+  const handleMouseOverCountry = (evt: React.MouseEvent<SVGPathElement, MouseEvent>, country: IMapCountry) => {
+    if (country.isCoffeeRegion && tooltip?.current) {
+      tooltip.current.style.display = "block";
+      tooltip.current.style.left = evt.pageX + 10 + 'px';
+      tooltip.current.style.top = evt.pageY + 10 + 'px';
+      setTooltipContent(renderTooltipContent(country));
+    }
+
+    setMapCountries(mapCountries
       .map(m => {
         if (isMatchCoffeeRegion(m, country)) {
           return {
@@ -158,13 +53,15 @@ const WorldMap = () => {
         }
 
         return m;
-      });
-
-    setMapCountries(updatedCountries)
+      }));
   };
 
   const handleMouseLeaveCountry = (country: IMapCountry) => {
-    const updatedCountries = mapCountries
+    if (tooltip?.current) {
+      tooltip.current.style.display = "none";
+    }
+
+    setMapCountries(mapCountries
       .map(m => {
         if (isMatchCoffeeRegion(m, country)) {
           return {
@@ -178,24 +75,39 @@ const WorldMap = () => {
         }
 
         return m;
-      });
+      }));
+  };
 
-    setMapCountries(updatedCountries)
+  const renderTooltipContent = (country: IMapCountry): ReactNode => {
+    return (
+      <div className="WorldMap--tooltip">
+        <div className="WorldMap--tooltip--title">
+          {country.coffeeRegionName}
+        </div>
+        <hr />
+        <p className="WorldMap--tooltip--content">
+          {country?.tasteProfile?.summary}
+        </p>
+      </div>
+    );
   };
 
   useEffect(() => {
-    const projection = d3
-      .geoEquirectangular()
-      .fitSize(mapSize, geoJson as any);
-
-    const geoPathGenerator = d3.geoPath().projection(projection);
+    const projection = geoEquirectangular().fitSize(mapSize, geoJson as any);
+    const geoPathGenerator = geoPath().projection(projection);
     const countries = constructContries(geoPathGenerator);
 
     setMapCountries(countries);
-  }, [mapSize]);
+  }, [constructContries, mapSize]);
 
   return (
     <div className="WorldMap">
+      <div ref={tooltip} style={{ position: 'absolute', display: 'none' }}>
+        <Tooltip>
+          {tooltipContent}
+        </Tooltip>
+      </div>
+
       <svg
         className="WorldMap--svg"
         width={mapSize[0]}
@@ -207,14 +119,9 @@ const WorldMap = () => {
               id={country.countryName}
               key={country.countryName}
               {...country.svg as any}
-              onMouseOver={() => handleMouseOverCountry(country)}
+              onMouseMove={(e) => handleMouseOverCountry(e, country)}
               onMouseLeave={() => handleMouseLeaveCountry(country)}
-            >
-              {
-                country.tasteProfile ?
-                  <title>{country.tasteProfile.summary}</title> : null
-              }
-            </path>
+            />
           )
         })}
       </svg>

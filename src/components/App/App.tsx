@@ -1,5 +1,5 @@
 import React from 'react';
-import { WorldMap } from '../WorldMap';
+import WorldMap from '../WorldMap';
 import './App.css';
 
 function App() {

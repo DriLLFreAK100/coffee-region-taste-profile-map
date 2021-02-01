@@ -1,0 +1,14 @@
+@import "../../styles/functions.scss";
+@import "../../styles/mixins.scss";
+
+.Tooltip {
+  padding: rem(8);
+  width: rem(200);
+
+  &--content {
+    background-color: white;
+    border: rem(1) solid #ddd;
+    box-shadow: 0 0 rem(8) rgba(192, 192, 192, 0.5);
+    @include padding(12, 8, 12, 8);
+  }
+}
