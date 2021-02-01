@@ -1,7 +1,6 @@
 import coffeeDistributor2019 from '../assets/coffee-distributor-2019.json';
 import geoJson from '../assets/world.json';
 import { SVGProps } from 'react';
-
 export interface ICoffeeDistributor {
   Rank: string;
   Country: string;
@@ -37,6 +36,9 @@ const exceptionCountryNames: { [key: string]: string } = {
   'Tanzania': 'United Republic of Tanzania',
   'Timor Leste': 'East Timor',
 }
+const exceptionRegionCountryNames: { [key: string]: any } = {
+  'Yemen': { REGION_UN: 'Africa' },
+}
 
 const constructContries = (geoPathGenerator: d3.GeoPath<any, d3.GeoPermissibleObjects>) => {
   const coffeeDistributorDict: { [key: string]: ICoffeeDistributor } =
@@ -46,6 +48,15 @@ const constructContries = (geoPathGenerator: d3.GeoPath<any, d3.GeoPermissibleOb
         [exceptionCountryNames[c.Country] ?? c.Country]: c,
       };
     }, {});
+
+  geoJson.features.forEach((feature) => {
+    if (exceptionRegionCountryNames[feature.properties.ADMIN]) {
+      feature.properties = {
+        ...feature.properties,
+        ...exceptionRegionCountryNames[feature.properties.ADMIN],
+      }
+    }
+  })
 
   const countries = geoJson.features.map((feature) => {
     let svgProps: SVGProps<SVGPathElement> = {
