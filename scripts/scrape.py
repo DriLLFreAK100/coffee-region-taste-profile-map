@@ -18,8 +18,10 @@ for row in rows[1:]:
     currentList = []
 
     for idx, ele in enumerate(cols):
+        # Remove comma from the numbers
         x = ele.text.strip().replace(',', '')
 
+        # Clean the country name with unwanted text
         if idx == 1:
             oddCharacterIndex = x.find('(')
             if oddCharacterIndex != -1:
