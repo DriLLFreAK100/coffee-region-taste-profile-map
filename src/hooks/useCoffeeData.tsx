@@ -1,6 +1,8 @@
 import coffeeDistributor2019 from '../assets/coffee-distributor-2019.json';
 import geoJson from '../assets/world.json';
+import { geoEquirectangular, geoPath } from 'd3-geo';
 import { SVGProps } from 'react';
+
 export interface ICoffeeDistributor {
   Rank: string;
   Country: string;
@@ -40,7 +42,10 @@ const exceptionRegionCountryNames: { [key: string]: any } = {
   'Yemen': { REGION_UN: 'Africa' },
 }
 
-const constructContries = (geoPathGenerator: d3.GeoPath<any, d3.GeoPermissibleObjects>) => {
+const constructContries = (mapSize: [number, number]): IMapCountry[] => {
+  const projection = geoEquirectangular().fitSize(mapSize, geoJson as any);
+  const geoPathGenerator = geoPath().projection(projection);
+
   const coffeeDistributorDict: { [key: string]: ICoffeeDistributor } =
     coffeeDistributor2019.reduce((a, c: ICoffeeDistributor) => {
       return {

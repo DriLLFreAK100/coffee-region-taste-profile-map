@@ -1,7 +1,5 @@
-import geoJson from '../../assets/world.json';
 import Tooltip from '../Tooltip';
 import useCoffeeData, { IMapCountry } from '../../hooks/useCoffeeData';
-import { geoEquirectangular, geoPath } from 'd3-geo';
 import { useWindowSize } from 'codefee-kit';
 import './WorldMap.scss';
 import {
@@ -93,11 +91,8 @@ const WorldMap = () => {
   };
 
   useEffect(() => {
-    const projection = geoEquirectangular().fitSize(mapSize, geoJson as any);
-    const geoPathGenerator = geoPath().projection(projection);
-    const countries = constructContries(geoPathGenerator);
-
-    setMapCountries(countries);
+    const initialMapCountries = constructContries(mapSize);
+    setMapCountries(initialMapCountries);
   }, [constructContries, mapSize]);
 
   return (
